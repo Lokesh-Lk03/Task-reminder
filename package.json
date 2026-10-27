@@ -12,6 +12,9 @@
     "start": "node backend/server.mjs",
     "preview": "npm run preview --workspace frontend -- --host 127.0.0.1"
   },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1"
+  },
   "devDependencies": {
     "concurrently": "^9.1.2"
   }
