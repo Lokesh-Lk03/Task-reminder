@@ -397,7 +397,10 @@ function App() {
           {apiStatus !== "connected" && <div className={`backend-banner ${apiStatus}`} role="status"><span>{apiStatus === "connecting" ? "Connecting to the Taskly server…" : `Taskly server is unavailable${apiError ? `: ${apiError}` : "."} Changes are saved in this browser until the connection is restored.`}</span>{apiStatus === "offline" && <button onClick={() => setRetryCount((count) => count + 1)}>Retry connection</button>}</div>}
           {storageWarning && <div className="storage-warning">Your browser storage may be full or unavailable. Changes may not persist after closing this page.</div>}
           {page === "settings" ? (
-            <SettingsPage settings={settings} onToggleNotifications={toggleNotifications} onChangeDefault={(value) => updateSetting("defaultPriority", value)} onClear={clearTasks} />
+            <>
+              <PageHero page="settings" counts={counts} onAdd={openCreate} />
+              <SettingsPage settings={settings} onToggleNotifications={toggleNotifications} onChangeDefault={(value) => updateSetting("defaultPriority", value)} onClear={clearTasks} />
+            </>
           ) : (
             <>
               {page === "dashboard" && (
@@ -426,7 +429,7 @@ function App() {
                 </>
               )}
               {page !== "dashboard" && (
-                <section className="list-heading"><div><div className="eyebrow">{page === "all" ? "TASK MANAGEMENT" : "WORKSPACE OVERVIEW"}</div><h1>{pageTitle}</h1><p>{page === "today" ? "Review tasks scheduled for today." : page === "upcoming" ? "Review tasks with future due dates." : page === "completed" ? "Review tasks marked as complete." : "View and manage all tasks in your workspace."}</p></div><button className="primary-button" onClick={openCreate}><Plus size={18} /> Add task</button></section>
+                <PageHero page={page} counts={counts} onAdd={openCreate} />
               )}
               <TaskList
                 tasks={visibleTasks}
@@ -518,7 +521,7 @@ function TaskRow({ task, now, onEdit, onDelete, onToggle, onDetails, menuId, set
       <button className="task-main" onClick={() => onDetails(task)} aria-label={`View details for ${task.title}`}>
         <span className="task-title">{task.title}</span>
         {task.description && <span className="task-description">{task.description}</span>}
-        <span className="task-meta"><span className={`due-label ${overdue ? "overdue-label" : ""}`}><CalendarDays size={13} />{overdue ? "Overdue · " : ""}{formatDue(task)}</span><span className="meta-dot">·</span><span>{task.category}</span>{due && <><span className="meta-dot">·</span><span className="reminder-meta"><Bell size={12} />{reminderLabel}</span></>}</span>
+        <span className="task-meta"><span className={`due-label ${overdue ? "overdue-label" : ""}`}><CalendarDays size={13} />{overdue ? "Overdue · " : ""}{formatDue(task)}</span><span className="meta-dot">·</span><span className={`category-badge category-${task.category.toLowerCase()}`}>{task.category}</span>{due && <><span className="meta-dot">·</span><span className="reminder-meta"><Bell size={12} />{reminderLabel}</span></>}</span>
       </button>
       <div className="task-end"><span className={`priority-badge priority-${task.priority.toLowerCase()}`}><span />{task.priority}</span><div className="task-menu-wrap"><button className="icon-button task-menu-trigger" aria-label={`More actions for ${task.title}`} onClick={() => setMenuId(menuId === task.id ? null : task.id)}><MoreHorizontal size={19} /></button>{menuId === task.id && <div className="task-menu"><button onClick={() => onEdit(task)}><Pencil size={15} /> Edit task</button><button onClick={() => onToggle(task)}><Check size={15} /> {task.completed ? "Reopen task" : "Mark complete"}</button><button className="delete-action" onClick={() => onDelete(task)}><Trash2 size={15} /> Delete task</button></div>}</div></div>
     </article>
@@ -558,7 +561,135 @@ function DetailsModal({ task, onClose, onEdit, onToggle }) {
 
 function SettingsPage({ settings, onToggleNotifications, onChangeDefault, onClear }) {
   const unsupported = typeof window !== "undefined" && !("Notification" in window);
-  return <section className="settings-page"><div className="eyebrow">PREFERENCES</div><h1>Settings</h1><p className="settings-intro">Configure notifications, task defaults, and local data.</p><div className="settings-card"><div className="setting-row"><div className="setting-icon"><Bell size={19} /></div><div className="setting-copy"><strong>Browser notifications</strong><p>Display browser notifications for reminders while Taskly is open.</p></div><button className={`toggle ${settings.notifications ? "toggle-on" : ""}`} role="switch" aria-checked={settings.notifications} aria-label="Enable browser notifications" disabled={unsupported} onClick={() => onToggleNotifications(!settings.notifications)}><span /></button></div>{unsupported && <p className="setting-note">Browser notifications are not supported by this browser.</p>}<div className="browser-note"><CircleHelp size={15} /><span>Reminders are checked while this page is open. Browser notifications may not be delivered if the site is closed, the browser is suspended, or permission is denied. Reliable background reminders require a push-notification service.</span></div><div className="settings-divider" /><div className="setting-row"><div className="setting-icon priority-setting-icon"><Sparkles size={19} /></div><div className="setting-copy"><strong>Default task priority</strong><p>Set the default priority for newly created tasks.</p></div><select className="default-select" aria-label="Default task priority" value={settings.defaultPriority} onChange={(event) => onChangeDefault(event.target.value)}><option>Low</option><option>Medium</option><option>High</option></select></div></div><div className="settings-card danger-card"><div className="setting-row"><div className="setting-icon danger-icon"><Trash2 size={19} /></div><div className="setting-copy"><strong>Delete all tasks</strong><p>Permanently remove all tasks stored by the backend.</p></div><button className="danger-button" onClick={onClear}>Delete all</button></div></div><p className="storage-note">Tasks and preferences are stored in the backend’s local JSON file, with a browser-local cache. No account or external database is configured.</p></section>;
+  return (
+    <section className="settings-page">
+      <div className="settings-card">
+        <div className="setting-row">
+          <div className="setting-icon"><Bell size={19} /></div>
+          <div className="setting-copy"><strong>Browser notifications</strong><p>Display browser notifications for reminders while Taskly is open.</p></div>
+          <button className={`toggle ${settings.notifications ? "toggle-on" : ""}`} role="switch" aria-checked={settings.notifications} aria-label="Enable browser notifications" disabled={unsupported} onClick={() => onToggleNotifications(!settings.notifications)}><span /></button>
+        </div>
+        {unsupported && <p className="setting-note">Browser notifications are not supported by this browser.</p>}
+        <div className="browser-note"><CircleHelp size={15} /><span>Reminders are checked while this page is open. Browser notifications may not be delivered if the site is closed, the browser is suspended, or permission is denied.</span></div>
+        <div className="settings-divider" />
+        <div className="setting-row">
+          <div className="setting-icon priority-setting-icon"><Sparkles size={19} /></div>
+          <div className="setting-copy"><strong>Default task priority</strong><p>Set the default priority for newly created tasks.</p></div>
+          <select className="default-select" aria-label="Default task priority" value={settings.defaultPriority} onChange={(event) => onChangeDefault(event.target.value)}><option>Low</option><option>Medium</option><option>High</option></select>
+        </div>
+      </div>
+      <div className="settings-card danger-card">
+        <div className="setting-row">
+          <div className="setting-icon danger-icon"><Trash2 size={19} /></div>
+          <div className="setting-copy"><strong>Delete all tasks</strong><p>Permanently remove all tasks stored in the cloud database.</p></div>
+          <button className="danger-button" onClick={onClear}>Delete all</button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PageHero({ page, counts, onAdd }) {
+  const configs = {
+    all: {
+      badge: "TASK MANAGEMENT",
+      title: "All Tasks",
+      description: "Organize, track, and manage all your tasks across your workspace.",
+      icon: ListTodo,
+      iconColor: "blue",
+      pill: `${counts.total} ${counts.total === 1 ? "task" : "tasks"}`,
+      stats: [
+        { label: "Pending", value: counts.pending, color: "orange" },
+        { label: "Completed", value: counts.completed, color: "green" },
+      ],
+    },
+    today: {
+      badge: "DAILY AGENDA",
+      title: "Today's Priorities",
+      description: "Focus on deliverables and milestones scheduled for today.",
+      icon: CalendarDays,
+      iconColor: "violet",
+      pill: `${counts.today} scheduled`,
+      stats: [
+        { label: "Due Today", value: counts.today, color: "violet" },
+        { label: "Overdue", value: counts.overdue, color: "red" },
+      ],
+    },
+    upcoming: {
+      badge: "FUTURE SCHEDULE",
+      title: "Upcoming Tasks",
+      description: "Stay ahead of upcoming deadlines and plan future deliverables.",
+      icon: Clock3,
+      iconColor: "blue",
+      pill: `${counts.pending} pending`,
+      stats: [
+        { label: "Pending", value: counts.pending, color: "orange" },
+        { label: "Overdue", value: counts.overdue, color: "red" },
+      ],
+    },
+    completed: {
+      badge: "TASK ARCHIVE",
+      title: "Completed Tasks",
+      description: "Review your accomplishments and closed tasks. Great progress!",
+      icon: CheckCheck,
+      iconColor: "green",
+      pill: `${counts.completed} completed`,
+      stats: [
+        { label: "Finished", value: counts.completed, color: "green" },
+        { label: "Total Handled", value: counts.total, color: "blue" },
+      ],
+    },
+    settings: {
+      badge: "PREFERENCES & CLOUD",
+      title: "Settings",
+      description: "Configure notifications, reminder alerts, default priority, and database syncing.",
+      icon: SettingsIcon,
+      iconColor: "violet",
+      pill: "Cloud Active",
+      stats: [
+        { label: "Database", value: "Supabase", color: "green" },
+        { label: "Sync", value: "Online", color: "blue" },
+      ],
+    },
+  };
+
+  const config = configs[page] ?? configs.all;
+  const Icon = config.icon;
+
+  return (
+    <section className="page-hero">
+      <div className="page-hero-main">
+        <div className={`page-hero-icon ${config.iconColor}`}>
+          <Icon size={24} />
+        </div>
+        <div className="page-hero-copy">
+          <div className="page-hero-eyebrow">
+            <span className="hero-pill-badge">{config.badge}</span>
+          </div>
+          <div className="page-hero-title-row">
+            <h1>{config.title}</h1>
+            <span className="page-hero-pill">{config.pill}</span>
+          </div>
+          <p>{config.description}</p>
+        </div>
+      </div>
+      <div className="page-hero-actions">
+        <div className="hero-stats-group">
+          {config.stats.map((s, i) => (
+            <div key={i} className="hero-stat-chip">
+              <span className="hero-stat-chip-label">{s.label}</span>
+              <span className={`hero-stat-chip-value ${s.color}`}>{s.value}</span>
+            </div>
+          ))}
+        </div>
+        {page !== "settings" && (
+          <button className="primary-button hero-cta" onClick={onAdd}>
+            <Plus size={17} /> Add task
+          </button>
+        )}
+      </div>
+    </section>
+  );
 }
 
 function AboutModal({ onClose }) {
