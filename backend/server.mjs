@@ -11,7 +11,7 @@ const distDir = resolve(dirname(fileURLToPath(import.meta.url)), "..", "frontend
 const maxBodySize = 1_000_000;
 const priorities = new Set(["Low", "Medium", "High"]);
 const categories = new Set(["Personal", "Work", "Study", "Other"]);
-const reminders = new Set(["at-time", "5m", "15m", "1h"]);
+const reminders = new Set(["at-time", "5m", "15m", "1h", "1d"]);
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",

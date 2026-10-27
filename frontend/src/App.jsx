@@ -177,11 +177,15 @@ function App() {
 
         remindedRef.current.add(reminderId);
         saveJSON(REMINDERS_KEY, [...remindedRef.current]);
-        setToast({ type: "reminder", message: `Reminder: ${task.title}` });
+        const dueFormatted = formatDue(task);
+        const reminderText = task.reminder === "1d"
+          ? `Reminder: "${task.title}" is due tomorrow (${dueFormatted})`
+          : `Reminder: "${task.title}" (Due: ${dueFormatted})`;
+        setToast({ type: "reminder", message: reminderText });
         if (settings.notifications && "Notification" in window && Notification.permission === "granted") {
           try {
             new Notification("Taskly reminder", {
-              body: task.title,
+              body: reminderText,
               tag: reminderId,
               icon: "/favicon.svg",
             });

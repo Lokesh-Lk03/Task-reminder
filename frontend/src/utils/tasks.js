@@ -7,6 +7,7 @@ export const REMINDER_OPTIONS = [
   { value: "5m", label: "5 minutes before", minutes: 5 },
   { value: "15m", label: "15 minutes before", minutes: 15 },
   { value: "1h", label: "1 hour before", minutes: 60 },
+  { value: "1d", label: "1 day before", minutes: 1440 },
 ];
 
 const priorities = ["Low", "Medium", "High"];
